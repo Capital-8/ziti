@@ -15,6 +15,7 @@ import (
 	managementConfig "github.com/openziti/edge-api/rest_management_api_client/config"
 	managementCurrentApiSession "github.com/openziti/edge-api/rest_management_api_client/current_api_session"
 	managementCurrentIdentity "github.com/openziti/edge-api/rest_management_api_client/current_identity"
+	managementEdgeRouter "github.com/openziti/edge-api/rest_management_api_client/edge_router"
 	managementEnrollment "github.com/openziti/edge-api/rest_management_api_client/enrollment"
 	"github.com/openziti/edge-api/rest_management_api_client/external_jwt_signer"
 	managementIdentity "github.com/openziti/edge-api/rest_management_api_client/identity"
@@ -137,6 +138,31 @@ func (helper *ManagementHelperClient) CreateConfig(configTypeId string, data int
 	}
 
 	resp, err := helper.API.Config.CreateConfig(params, nil)
+
+	if err != nil {
+		return nil, rest_util.WrapErr(err)
+	}
+
+	return resp.Payload.Data, nil
+}
+
+// ListEnumeratedRouterCapabilities returns every router capability the controller advertises via
+// the enumerated-router-capabilities endpoint.
+func (helper *ManagementHelperClient) ListEnumeratedRouterCapabilities() ([]rest_model.RouterCapabilities, error) {
+	resp, err := helper.API.Informational.ListEnumeratedRouterCapabilities(managementInformational.NewListEnumeratedRouterCapabilitiesParams(), nil)
+
+	if err != nil {
+		return nil, rest_util.WrapErr(err)
+	}
+
+	return resp.Payload.Data, nil
+}
+
+// GetEdgeRouter returns the management-API detail for the edge router with the given id.
+func (helper *ManagementHelperClient) GetEdgeRouter(edgeRouterId string) (*rest_model.EdgeRouterDetail, error) {
+	resp, err := helper.API.EdgeRouter.DetailEdgeRouter(&managementEdgeRouter.DetailEdgeRouterParams{
+		ID: edgeRouterId,
+	}, nil)
 
 	if err != nil {
 		return nil, rest_util.WrapErr(err)

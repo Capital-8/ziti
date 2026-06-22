@@ -23,6 +23,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"math/big"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -700,6 +701,8 @@ func (strategy *InstantStrategy) ReceiveClientHello(routerId string, msg *channe
 	rtx.SetProtocols(protocols)
 	rtx.SetVersionInfo(*rtx.Router.VersionInfo)
 
+	strategy.persistRouterReportedState(rtx)
+
 	serverVersion := build.GetBuildInfo().Version()
 
 	currentIndex := strategy.CurrentIndex()
@@ -709,6 +712,32 @@ func (strategy *InstantStrategy) ReceiveClientHello(routerId string, msg *channe
 		WithField("serverVersion", serverVersion).
 		Info("edge router sent hello")
 	strategy.queueClientHello(rtx)
+}
+
+// persistRouterReportedState records the capabilities bitmask and binary version the router
+// reported on connect onto the edge router entity. The manager only writes when the values
+// changed, so a steady-state reconnect is a cheap read with no raft write.
+func (strategy *InstantStrategy) persistRouterReportedState(rtx *RouterSender) {
+	var mask int64
+	if rtx.Router.Capabilities != nil {
+		mask = new(big.Int).SetBytes(rtx.Router.Capabilities.Bytes()).Int64()
+	}
+
+	version := ""
+	if rtx.Router.VersionInfo != nil {
+		version = rtx.Router.VersionInfo.Version
+	}
+
+	changeCtx := change.New().
+		SetSourceType(change.SourceTypeControlChannel).
+		SetSourceMethod("router.hello").
+		SetChangeAuthorType(change.AuthorTypeRouter).
+		SetChangeAuthorId(rtx.Router.Id).
+		SetChangeAuthorName(rtx.Router.Name)
+
+	if err := strategy.ae.Managers.EdgeRouter.UpdateRouterReportedState(rtx.Router.Id, mask, version, changeCtx); err != nil {
+		rtx.logger().WithError(err).Error("failed to persist router reported capabilities/version")
+	}
 }
 
 func (strategy *InstantStrategy) synchronize(rtx *RouterSender) {
