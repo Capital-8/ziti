@@ -264,6 +264,8 @@ func (self *edgeTerminator) GetAndClearRateLimitCallback() rate.RateLimitControl
 	return result
 }
 
+var _ xgress.SignalConnection = (*edgeXgressConn)(nil)
+
 type edgeXgressConn struct {
 	edge.MsgChannel
 	mux     edge.ConnMux[any]

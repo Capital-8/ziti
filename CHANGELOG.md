@@ -22,6 +22,7 @@
     * [Issue #4506](https://github.com/openziti/ziti/issues/4506) - [Backport-1.6] Router pins a CPU core reporting metrics while no controller is registered
     * [Issue #4648](https://github.com/openziti/ziti/issues/4648) - [Backport-1.6] Remove the edge router API proxy
     * [Issue #4613](https://github.com/openziti/ziti/issues/4613) - [Backport-1.6] Controller deadlocks when posture data changes for an identity with legacy API sessions
+    * [Issue #4695](https://github.com/openziti/ziti/issues/4695) - [Backport-1.6] Router does not relay an SDK xgress terminator's half-close to tunneler, proxy, or embedded SDK initiators
 
 
 # Release 1.6.22
